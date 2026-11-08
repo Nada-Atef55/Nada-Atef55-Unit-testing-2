@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="Simulation.Checkout.Application/Simulation.Checkout.Application.csproj" />
+    <Project Path="Simulation.Checkout.Domain/Simulation.Checkout.Domain.csproj" />
+    <Project Path="Simulation.Checkout.Infrastructur/Simulation.Checkout.Infrastructur.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="Simulation.Checkout.Tests/Simulation.Checkout.Tests.csproj" />
+  </Folder>
+</Solution>
