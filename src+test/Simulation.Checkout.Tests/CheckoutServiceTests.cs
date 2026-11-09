@@ -1,6 +1,5 @@
 ﻿using Moq;
 using NSubstitute;
-using NSubstitute.ReceivedExtensions;
 using Shouldly;
 using Simulation.Checkout.Application;
 using Simulation.Checkout.Application.Abstractions;
