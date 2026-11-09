@@ -1,10 +1,12 @@
-﻿using NSubstitute;
+﻿using Moq;
+using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using Shouldly;
 using Simulation.Checkout.Application;
 using Simulation.Checkout.Application.Abstractions;
 using Simulation.Checkout.Domain;
 using Simulation.Checkout.Domain.Exceptions;
+using Simulation.Checkout.Infrastructur;
 
 namespace Simulation.Checkout.Tests;
 
@@ -279,5 +281,123 @@ public class CheckoutServiceTests
         receipt.Discount.ShouldBe(discount);
         receipt.Total.ShouldBe(total);
     }
+
+
+    // Task 2 : 1
+
+    [Fact]
+    public async Task CheckoutAsync_ValidOrder_SavedAndConfirmed()
+    {
+        // Arrange
+        var order = new Order
+        {
+            CustomerName = "Nada",
+            CustomerEmail = "nada@example.com",
+            Items =
+            [
+                new OrderItem
+                {
+                    ProductId = Guid.NewGuid(),
+                    ProductName = "Laptop",
+                    UnitPrice = 1200,
+                    Quantity = 1
+                }
+            ]
+        };
+
+        var notification = new Mock<INotificationService>();
+        var inventory = new Mock<IInventoryService>();
+        inventory.Setup(x => x.IsAvailableAsync(It.IsAny<Guid>(), It.IsAny<int>())).ReturnsAsync(true);
+        var repository = new InMemoryOrderRepository();
+
+        var checkout = new CheckoutService(repository, inventory.Object, notification.Object);
+
+        // Act
+        await checkout.CheckoutAsync(order);
+
+
+        // Assert
+        repository.GetAll().Count.ShouldBe(1);
+        notification.Verify(x => x.SendOrderConfirmationAsync(It.IsAny<CheckoutReceipt>()), Times.Once);
+    }
+
+
+
+    // Task 2 : 2
+    [Fact]
+    public async Task CheckoutAsync_ItemOutOfStock_Throws()
+    {
+        // Arrange
+        var order = new Order
+        {
+            CustomerName = "Nada",
+            CustomerEmail = "nada@example.com",
+            Items =
+            [
+                new OrderItem
+                        {
+                            ProductId = Guid.NewGuid(),
+                            ProductName = "Phone",
+                            UnitPrice = 800,
+                            Quantity = 1
+                        }
+            ]
+        };
+
+
+
+        var notification = new Mock<INotificationService>();
+        var inventory = new Mock<IInventoryService>();
+        inventory.Setup(x => x.IsAvailableAsync(It.IsAny<Guid>(), It.IsAny<int>())).ReturnsAsync(false);
+        var repository = new Mock<IOrderRepository>();
+
+        var checkout = new CheckoutService(repository.Object, inventory.Object, notification.Object);
+
+        // Act + Assert
+        await Should.ThrowAsync<InsufficientInventoryException>(() => checkout.CheckoutAsync(order));
+        repository.Verify(x => x.SaveAsync(order), Times.Never);
+        notification.Verify(x => x.SendOrderConfirmationAsync(It.IsAny<CheckoutReceipt>()), Times.Never);
+
+    }
+
+
+    // Task 2 : 3
+    [Fact]
+    public async Task CheckoutAsync_InvalidOrder_ThrowsAndNotSavedOrConfirmed()
+    {
+        // Arrange
+        var order = new Order
+        {
+            CustomerName = "Nada",
+            CustomerEmail = "nada@example.com",
+            Items =
+            [
+                new OrderItem
+                        {
+                            ProductId = Guid.NewGuid(),
+                            ProductName = "NoteBook",
+                            UnitPrice = 120m,
+                            Quantity = 0
+                        }
+            ]
+        };
+
+
+
+        var notification = new Mock<INotificationService>();
+        var inventory = new Mock<IInventoryService>();
+        var repository = new Mock<IOrderRepository>();
+
+        var checkout = new CheckoutService(repository.Object, inventory.Object, notification.Object);
+
+        // Act + Assert
+        await Should.ThrowAsync<InvalidQuantityException>(() => checkout.CheckoutAsync(order));
+        inventory.Verify(x => x.IsAvailableAsync(It.IsAny<Guid>(), It.IsAny<int>()), Times.Never);
+        repository.Verify(x => x.SaveAsync(order), Times.Never);
+        notification.Verify(x => x.SendOrderConfirmationAsync(It.IsAny<CheckoutReceipt>()), Times.Never);
+
+    }
+
+
 
 }

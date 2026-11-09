@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="NSubstitute" Version="6.2.0" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -19,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Simulation.Checkout.Application\Simulation.Checkout.Application.csproj" />
     <ProjectReference Include="..\Simulation.Checkout.Domain\Simulation.Checkout.Domain.csproj" />
+    <ProjectReference Include="..\Simulation.Checkout.Infrastructur\Simulation.Checkout.Infrastructur.csproj" />
   </ItemGroup>
 
   <ItemGroup>
